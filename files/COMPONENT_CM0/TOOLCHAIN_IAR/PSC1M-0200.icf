@@ -1,0 +1,111 @@
+/**
+ * @file PSC1M-0200.icf
+ *
+ * @cond
+ *****************************************************************************
+ * Linker file for the IAR C Compiler
+ * Supported devices: PSC1M2FBABQ0AT
+ *                    PSC1M2FBLEQ0AT
+ *                    PSC1M2FBLGQ0AT
+ *                    PSC1M2FBTBQ0AT
+ *                    PSC1M3FBABQ0AT
+ *                    PSC1M3FBLGQ0AT
+ *
+ * \copyright
+ * (c) 2016-2026, Infineon Technologies AG or an affiliate of
+ * Infineon Technologies AG.
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *****************************************************************************
+ * @endcond
+ *
+ */
+
+/*###ICF### Section handled by ICF editor, don't touch! ###ICF###*/
+
+/* Memory base addresses and sizes */
+define symbol __FLASH_START__   = 0x10001000;
+define symbol __FLASH_SIZE__    = 0x00032000;
+
+define symbol __SRAM_START__    = 0x20000000;
+define symbol __SRAM_SIZE__     = 0x00004000;
+
+define symbol __STACK_SIZE__    = 0x00000400;
+
+/* Defines the minimum heap size. The actual heap size will be expanded to the end of the stack region 
+/* This value can be adjusted using LDFLAGS=--config_def __HEAP_SIZE=<value> */
+if (!isdefinedsymbol(__HEAP_SIZE)) {
+    define symbol __HEAP_SIZE__     = 0x00000800;
+} else {
+    define symbol __HEAP_SIZE__     = __HEAP_SIZE;
+}
+
+define symbol __NO_INIT_SIZE__  = 0x00000004;
+
+/* Derived symbols */
+define symbol __NO_INIT_START__ = __SRAM_START__ + __SRAM_SIZE__ - __NO_INIT_SIZE__;
+
+/*###ICF###*/
+
+define memory mem with size = 4G;
+
+define region FLASH_region   = mem:[from __FLASH_START__  size __FLASH_SIZE__];
+define region SRAM_region    = mem:[from __SRAM_START__   size __SRAM_SIZE__ - __NO_INIT_SIZE__];
+define region NOINIT_region  = mem:[from __NO_INIT_START__ size __NO_INIT_SIZE__];
+
+/* Stack block - grows downward, placed at top of SRAM */
+define block CSTACK with alignment = 8, size = __STACK_SIZE__ { };
+
+/* Heap block */
+define block HEAP   with alignment = 8, size = __HEAP_SIZE__ { };
+
+/* Sections copied from flash to SRAM at startup */
+initialize by copy
+{
+    readwrite,
+    section .ram_code,
+    section .vect_table
+};
+
+/* Sections that must NOT be initialized */
+do not initialize
+{
+    section .no_init,
+    section .noinit
+};
+
+/* Flash placement */
+place at address mem: __FLASH_START__ { readonly section .intvec };
+place in FLASH_region { readonly };
+
+/* SRAM placement */
+place in SRAM_region { readwrite };
+
+/* Vector veneers */
+place at address mem:__SRAM_START__ + 0xC { section .vect_table };
+
+/* RAM code */
+place in SRAM_region { section .ram_code };
+
+/* ZI / BSS */
+place in SRAM_region { zeroinit };
+
+/* Heap */
+place in SRAM_region { block HEAP };
+
+/* Stack at top of usable SRAM */
+place in SRAM_region { block CSTACK };
+
+/* No-init region at the very end of SRAM (e.g. SystemCoreClock) */
+place in NOINIT_region { section .no_init, section .noinit };

@@ -1,0 +1,108 @@
+#! armclang -E --target=arm-arm-none-eabi -mcpu=cortex-m0 -xc
+/**
+ * @file PSC1M-0200.sct
+ *
+ * @cond
+ *****************************************************************************
+ * Linker file for the ARM
+ * Supported devices: PSC1M2FBABQ0AT
+ *                    PSC1M2FBLEQ0AT
+ *                    PSC1M2FBLGQ0AT
+ *                    PSC1M2FBTBQ0AT
+ *                    PSC1M3FBABQ0AT
+ *                    PSC1M3FBLGQ0AT
+ *
+ * \copyright
+ * (c) 2016-2026, Infineon Technologies AG or an affiliate of
+ * Infineon Technologies AG.
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *****************************************************************************
+ * @endcond
+ *
+ */
+
+/*
+;-------- <<< Use Configuration Wizard in Context Menu >>> -------------------
+*/
+
+/*--------------------- Stack / Heap Configuration ---------------------------
+; <h> Stack / Heap Configuration
+;   <o0> Stack Size (in Bytes) <0x0-0xFFFFFFFF:8>
+;   <o1> Heap Size (in Bytes) <0x0-0xFFFFFFFF:8>
+; </h>
+ *----------------------------------------------------------------------------*/
+#define __STACK_SIZE       0x00000400
+#define __HEAP_SIZE        0x00000800
+
+/*
+;------------- <<< end of configuration section >>> ---------------------------
+*/
+
+#define __ROM_BASE     0x10001000
+#define __ROM_SIZE     0x00032000
+
+#define __RAM_BASE     0x20000000
+#define __RAM_SIZE     0x00004000
+
+#define __NO_INIT_SIZE 0x00000004
+
+/*----------------------------------------------------------------------------
+  User Stack & Heap boundary definition
+ *----------------------------------------------------------------------------*/
+#define __STACK_TOP    (__RAM_BASE + __RAM_SIZE - __NO_INIT_SIZE)    /* starts at end of RAM */
+#define __HEAP_BASE    (AlignExpr(+0, 8))           /* starts after RW_RAM section, 8 byte aligned */
+
+/*----------------------------------------------------------------------------
+  Scatter File Definitions definition
+ *----------------------------------------------------------------------------*/
+#define __RW_BASE       __RAM_BASE
+#define __RW_SIZE      (__RAM_SIZE - __STACK_SIZE - __HEAP_SIZE - __NO_INIT_SIZE)
+
+
+LR_IROM1 __ROM_BASE __ROM_SIZE  {    ; load region size_region
+  ER_IROM1 __ROM_BASE __ROM_SIZE  {  ; load address = execution address
+   *.o (RESET, +First)
+   *(InRoot$$Sections)
+   .ANY (+RO)
+   .ANY (+XO)
+  }
+
+  /* DSRAM layout (Lowest to highest)                    */
+  /* Veneer <-> DATA/BSS <-> HEAP <-> STACK <-> NO_INIT  */
+
+  /* Veneer section - copied from flash to SRAM at startup, fixed at SRAM base */
+  RW_IRAM1 __RW_BASE __RW_SIZE  {  ; RW data
+   *.o (VENEERS, +First)
+   .ANY (+RW +ZI)
+  }
+
+  /* RAM code - functions explicitly placed in RAM */
+  RW_RAM_CODE +0  {
+   *.o (.ram_code)
+  }
+
+#if __HEAP_SIZE > 0
+  ARM_LIB_HEAP  __HEAP_BASE EMPTY  __HEAP_SIZE  {   ; Reserve empty region for heap
+  }
+#endif
+
+  ARM_LIB_STACK __STACK_TOP EMPTY -__STACK_SIZE {   ; Reserve empty region for stack
+  }
+
+  /* No-init section at the very end of SRAM (SystemCoreClock etc.) */
+  RW_NOINIT (__RAM_BASE + __RAM_SIZE - __NO_INIT_SIZE) UNINIT __NO_INIT_SIZE  {
+   .ANY (.no_init)
+  }
+}

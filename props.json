@@ -1,0 +1,73 @@
+{
+    "core": {
+        "id": "3020ef6c-dde3-55d1-a340-766876c6ab55",
+        "name": "mtb-template-psc1m3",
+        "version": "1.0.0.2925"
+    },
+    "opt": {
+        "props": {
+            "TemplateData": {
+                "udd_key": "DeviceDie",
+                "PSC1M": {
+                    "udd_key": "Flash_KB",
+                    "64": {
+                        "files": [
+                            "filelist/psc1m3.txt",
+                            "filelist/psc1m-0064.txt"
+                        ],
+                        "deps": "psc1m3_dependencies",
+                        "components": "psc1m3_components",
+                        "defines": [],
+                        "makefile_vars": "psc1m3_vars",
+                        "files_init": "filelist/init_psc1m3.txt"
+                    },
+                    "128": {
+                        "files": [
+                            "filelist/psc1m3.txt",
+                            "filelist/psc1m-0128.txt"
+                        ],
+                        "deps": "psc1m3_dependencies",
+                        "components": "psc1m3_components",
+                        "defines": [],
+                        "makefile_vars": "psc1m3_vars",
+                        "files_init": "filelist/init_psc1m3.txt"
+                    },
+                    "200": {
+                        "files": [
+                            "filelist/psc1m3.txt",
+                            "filelist/psc1m-0200.txt"
+                        ],
+                        "deps": "psc1m3_dependencies",
+                        "components": "psc1m3_components",
+                        "defines": [],
+                        "makefile_vars": "psc1m3_vars",
+                        "files_init": "filelist/init_psc1m3.txt"
+                    }
+                }
+            },
+            "dependency_sets": {
+                "psc1m3_dependencies": [
+                    "deps/core-lib.mtbx",
+                    "deps/core-make.mtbx",
+                    "deps/mtb-dsl-psc1m3.mtbx"
+                ]
+            },
+            "component_sets": {
+                "psc1m3_components": []
+            },
+            "define_sets": {},
+            "makefile_var_sets": {
+                "psc1m3_vars": [
+                    {
+                        "name": "RECIPE_DIR",
+                        "value": "$(SEARCH_mtb-dsl-psc1m3)/make"
+                    },
+                    {
+                        "name": "BSP_DEVICE_SUPPORT_LIB",
+                        "value": "mtb-dsl-psc1m3"
+                    }
+                ]
+            }
+        }
+    }
+}
